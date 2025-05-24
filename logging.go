@@ -2,6 +2,7 @@ package iiot
 
 import (
 	"context"
+	"encoding/json"
 
 	"go.uber.org/zap"
 )
@@ -24,6 +25,38 @@ func LoggingMiddleware(log *zap.Logger) ServiceMiddleware {
 type loggingMiddleware struct {
 	log  *zap.Logger
 	next Service
+}
+
+func (mw *loggingMiddleware) Schema(ctx context.Context, driver string) (json.RawMessage, error) {
+	log := mw.log.With(
+		zap.String("action", "schema"),
+		zap.String("driver", driver),
+	)
+
+	schema, err := mw.next.Schema(ctx, driver)
+	if err != nil {
+		log.Error(err.Error())
+		return nil, err
+	}
+
+	log.Info("schema retrieved")
+	return schema, nil
+}
+
+func (mw *loggingMiddleware) ReadPoints(ctx context.Context, driver string, raw json.RawMessage) ([]any, error) {
+	log := mw.log.With(
+		zap.String("action", "read_points"),
+		zap.String("driver", driver),
+	)
+
+	points, err := mw.next.ReadPoints(ctx, driver, raw)
+	if err != nil {
+		log.Error(err.Error())
+		return nil, err
+	}
+
+	log.Info("Read points successful", zap.Any("points", points))
+	return points, nil
 }
 
 func (mw *loggingMiddleware) CheckConnection(ctx context.Context, network string, address string) error {

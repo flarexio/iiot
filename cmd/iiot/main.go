@@ -15,6 +15,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/flarexio/iiot"
+	"github.com/flarexio/iiot/driver"
 	"github.com/flarexio/iiot/transport/http"
 	"github.com/flarexio/iiot/transport/pubsub"
 )
@@ -70,10 +71,14 @@ func run(ctx context.Context, cmd *cli.Command) error {
 	zap.ReplaceGlobals(log) // Replace the global logger
 
 	// Create a new IIoT service
-	svc := iiot.NewService()
+	driverClient := driver.NewCliDriverClient()
+
+	svc := iiot.NewService(driverClient)
 	svc = iiot.LoggingMiddleware(log)(svc)
 
 	endpoints := iiot.EndpointSet{
+		Schema:          iiot.SchemaEndpoint(svc),
+		ReadPoints:      iiot.ReadPointsEndpoint(svc),
 		CheckConnection: iiot.CheckConnectionEndpoint(svc),
 	}
 
