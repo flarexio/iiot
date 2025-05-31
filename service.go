@@ -3,14 +3,16 @@ package iiot
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net"
+	"os"
+	"path/filepath"
+	"strings"
 
-	"github.com/flarexio/iiot/driver"
+	"github.com/flarexio/iiot/driver/tool"
 )
 
 type Service interface {
-	driver.Client
-
 	// CheckConnection checks if the given network and address are reachable.
 	//
 	// Args:
@@ -19,24 +21,26 @@ type Service interface {
 	// Returns:
 	//   - error: nil if the connection is successful, otherwise an error.
 	CheckConnection(ctx context.Context, network string, address string) error
+
+	// ListDrivers retrieves a list of available drivers.
+	//
+	// Returns:
+	//   - drivers: A slice of driver names.
+	//   - error: nil if the operation is successful, otherwise an error.
+	ListDrivers(ctx context.Context) (drivers []string, err error)
+
+	tool.Client
 }
 
 type ServiceMiddleware func(Service) Service
 
-func NewService(client driver.Client) Service {
-	return &service{client}
+func NewService(path string, tool tool.Client) Service {
+	return &service{path, tool}
 }
 
 type service struct {
-	client driver.Client
-}
-
-func (svc *service) Schema(ctx context.Context, driver string) (json.RawMessage, error) {
-	return svc.client.Schema(ctx, driver)
-}
-
-func (svc *service) ReadPoints(ctx context.Context, driver string, raw json.RawMessage) ([]any, error) {
-	return svc.client.ReadPoints(ctx, driver, raw)
+	path string
+	tool tool.Client
 }
 
 func (svc *service) CheckConnection(ctx context.Context, network string, address string) error {
@@ -49,4 +53,41 @@ func (svc *service) CheckConnection(ctx context.Context, network string, address
 	defer conn.Close()
 
 	return nil
+}
+
+func (svc *service) ListDrivers(ctx context.Context) ([]string, error) {
+	driverPath := filepath.Join(svc.path, "drivers")
+
+	entries, err := os.ReadDir(driverPath)
+	if err != nil {
+		return nil, err
+	}
+
+	drivers := make([]string, 0)
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+
+		driver, ok := strings.CutSuffix(entry.Name(), "_tool")
+		if !ok {
+			continue
+		}
+
+		drivers = append(drivers, driver)
+	}
+
+	if len(drivers) == 0 {
+		return nil, errors.New("no drivers available")
+	}
+
+	return drivers, nil
+}
+
+func (svc *service) Schema(ctx context.Context, driver string) (json.RawMessage, error) {
+	return svc.tool.Schema(ctx, driver)
+}
+
+func (svc *service) ReadPoints(ctx context.Context, driver string, raw json.RawMessage) ([]any, error) {
+	return svc.tool.ReadPoints(ctx, driver, raw)
 }

@@ -78,5 +78,38 @@ func run(ctx context.Context, cmd *cli.Command) error {
 		s.AddTool(tool, handler)
 	}
 
+	// Add ListDrivers tool
+	{
+		endpoint := iiot.ListDriversEndpoint(svc)
+		handler := mcp.ListDriversHandler(endpoint)
+		handler = mcp.InjectContextMiddleware()(handler)
+
+		tool := mcp.ListDriversTool()
+
+		s.AddTool(tool, handler)
+	}
+
+	// Add Schema tool
+	{
+		endpoint := iiot.SchemaEndpoint(svc)
+		handler := mcp.SchemaHandler(endpoint)
+		handler = mcp.InjectContextMiddleware()(handler)
+
+		tool := mcp.SchemaTool()
+
+		s.AddTool(tool, handler)
+	}
+
+	// Add ReadPoints tool
+	{
+		endpoint := iiot.ReadPointsEndpoint(svc)
+		handler := mcp.ReadPointsHandler(endpoint)
+		handler = mcp.InjectContextMiddleware()(handler)
+
+		tool := mcp.ReadPointsTool()
+
+		s.AddTool(tool, handler)
+	}
+
 	return server.ServeStdio(s)
 }

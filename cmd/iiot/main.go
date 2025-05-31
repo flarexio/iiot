@@ -5,7 +5,9 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strconv"
+	"strings"
 	"syscall"
 
 	"github.com/gin-gonic/gin"
@@ -15,9 +17,10 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/flarexio/iiot"
-	"github.com/flarexio/iiot/driver"
 	"github.com/flarexio/iiot/transport/http"
 	"github.com/flarexio/iiot/transport/pubsub"
+
+	tool "github.com/flarexio/iiot/driver/tool/stdio"
 )
 
 const (
@@ -29,6 +32,10 @@ func main() {
 		Name:  "iiot",
 		Usage: "IIoT Service",
 		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:  "path",
+				Usage: "Path to the IIoT service",
+			},
 			&cli.IntFlag{
 				Name:  "port",
 				Usage: "HTTP server port",
@@ -39,17 +46,6 @@ func main() {
 				Usage:   "NATS server URL",
 				Value:   "wss://nats.flarex.io",
 				Sources: cli.EnvVars("NATS_URL"),
-			},
-			&cli.StringFlag{
-				Name:    "creds",
-				Usage:   "NATS user credentials file",
-				Sources: cli.EnvVars("NATS_CREDS"),
-			},
-			&cli.StringFlag{ // TOOD: Review EdgeID source
-				Name:     "edge",
-				Usage:    "Edge ID",
-				Sources:  cli.EnvVars("EDGE_ID"),
-				Required: true,
 			},
 		},
 		Action: run,
@@ -62,6 +58,16 @@ func main() {
 }
 
 func run(ctx context.Context, cmd *cli.Command) error {
+	path := cmd.String("path")
+	if path == "" {
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			return err
+		}
+
+		path = homeDir + "/.flarex/iiot"
+	}
+
 	log, err := zap.NewDevelopment()
 	if err != nil {
 		return err
@@ -70,16 +76,20 @@ func run(ctx context.Context, cmd *cli.Command) error {
 
 	zap.ReplaceGlobals(log) // Replace the global logger
 
-	// Create a new IIoT service
-	driverClient := driver.NewCliDriverClient()
+	// Initialize the tool client
+	driverPath := filepath.Join(path, "drivers")
+	executor := tool.NewCommandExecutor(driverPath)
+	tool := tool.NewStdioClient(executor)
 
-	svc := iiot.NewService(driverClient)
+	// Create a new IIoT service
+	svc := iiot.NewService(path, tool)
 	svc = iiot.LoggingMiddleware(log)(svc)
 
 	endpoints := iiot.EndpointSet{
+		CheckConnection: iiot.CheckConnectionEndpoint(svc),
+		ListDrivers:     iiot.ListDriversEndpoint(svc),
 		Schema:          iiot.SchemaEndpoint(svc),
 		ReadPoints:      iiot.ReadPointsEndpoint(svc),
-		CheckConnection: iiot.CheckConnectionEndpoint(svc),
 	}
 
 	// Add HTTP Transport
@@ -95,8 +105,14 @@ func run(ctx context.Context, cmd *cli.Command) error {
 	// Add PubSub Transport
 	{
 		natsURL := cmd.String("nats")
-		natsCreds := cmd.String("creds")
-		edgeID := cmd.String("edge")
+		natsCreds := filepath.Join(path, "user.creds")
+
+		f, err := os.ReadFile(filepath.Join(path, "id"))
+		if err != nil {
+			return err
+		}
+
+		edgeID := strings.TrimSpace(string(f))
 
 		nc, err := nats.Connect(natsURL,
 			nats.Name("IIoT Service - "+edgeID),

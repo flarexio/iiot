@@ -18,6 +18,30 @@ type proxyMiddleware struct {
 	endpoints *EndpointSet
 }
 
+func (mw *proxyMiddleware) CheckConnection(ctx context.Context, network string, address string) error {
+	req := CheckConnectionRequest{
+		Network: network,
+		Address: address,
+	}
+
+	_, err := mw.endpoints.CheckConnection(ctx, req)
+	return err
+}
+
+func (mw *proxyMiddleware) ListDrivers(ctx context.Context) ([]string, error) {
+	resp, err := mw.endpoints.ListDrivers(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	drivers, ok := resp.([]string)
+	if !ok {
+		return nil, errors.New("invalid response")
+	}
+
+	return drivers, nil
+}
+
 func (mw *proxyMiddleware) Schema(ctx context.Context, driver string) (json.RawMessage, error) {
 	resp, err := mw.endpoints.Schema(ctx, driver)
 	if err != nil {
@@ -49,14 +73,4 @@ func (mw *proxyMiddleware) ReadPoints(ctx context.Context, driver string, raw js
 	}
 
 	return points, nil
-}
-
-func (mw *proxyMiddleware) CheckConnection(ctx context.Context, network string, address string) error {
-	req := CheckConnectionRequest{
-		Network: network,
-		Address: address,
-	}
-
-	_, err := mw.endpoints.CheckConnection(ctx, req)
-	return err
 }
