@@ -37,25 +37,12 @@ func CheckConnectionTool(name ...string) mcp.Tool {
 
 func CheckConnectionHandler(endpoint endpoint.Endpoint) server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		args := request.Params.Arguments
-
-		network, ok := args["network"].(string)
-		if !ok {
-			return nil, errors.New("invalid network type")
+		var req iiot.CheckConnectionRequest
+		if err := request.BindArguments(&req); err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
 		}
 
-		address, ok := args["address"].(string)
-		if !ok {
-			return nil, errors.New("invalid address")
-		}
-
-		req := iiot.CheckConnectionRequest{
-			Network: network,
-			Address: address,
-		}
-
-		_, err := endpoint(ctx, req)
-		if err != nil {
+		if _, err := endpoint(ctx, req); err != nil {
 			return mcp.NewToolResultError(err.Error()), nil
 		}
 
@@ -119,11 +106,9 @@ func SchemaTool(name ...string) mcp.Tool {
 
 func SchemaHandler(endpoint endpoint.Endpoint) server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		args := request.Params.Arguments
-
-		driver, ok := args["driver"].(string)
-		if !ok {
-			return nil, errors.New("invalid driver type")
+		driver, err := request.RequireString("driver")
+		if err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
 		}
 
 		resp, err := endpoint(ctx, driver)
@@ -165,21 +150,9 @@ func ReadPointsTool(name ...string) mcp.Tool {
 
 func ReadPointsHandler(endpoint endpoint.Endpoint) server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		args := request.Params.Arguments
-
-		driver, ok := args["driver"].(string)
-		if !ok {
-			return nil, errors.New("invalid driver type")
-		}
-
-		raw, ok := args["raw"].(json.RawMessage)
-		if !ok {
-			return nil, errors.New("invalid raw data")
-		}
-
-		req := iiot.ReadPointsRequest{
-			Driver: driver,
-			Raw:    raw,
+		var req iiot.ReadPointsRequest
+		if err := request.BindArguments(&req); err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
 		}
 
 		resp, err := endpoint(ctx, req)

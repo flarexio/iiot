@@ -42,17 +42,23 @@ func WithContext(name string, desc string, props ...*Property) mcp.ToolOption {
 	)
 }
 
+type EdgeContext struct {
+	EdgeID string `json:"edge_id"`
+}
+
 func InjectContextMiddleware() server.ToolHandlerMiddleware {
 	return func(next server.ToolHandlerFunc) server.ToolHandlerFunc {
 		return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-			c, ok := request.Params.Arguments["ctx"].(map[string]any)
-			if !ok {
+			var req struct {
+				EdgeCtx EdgeContext `json:"ctx"`
+			}
+
+			if err := request.BindArguments(&req); err != nil {
 				return next(ctx, request)
 			}
 
-			edgeID, ok := c["edge_id"].(string)
-			if ok {
-				ctx = context.WithValue(ctx, model.EdgeID, edgeID)
+			if req.EdgeCtx.EdgeID != "" {
+				ctx = context.WithValue(ctx, model.EdgeID, req.EdgeCtx.EdgeID)
 			}
 
 			return next(ctx, request)
