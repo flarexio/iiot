@@ -15,6 +15,15 @@ type Client interface {
 	//   - err: nil if the operation is successful, otherwise an error.
 	Schema(ctx context.Context, driver string) (schema json.RawMessage, err error)
 
+	// Instruction retrieves the instruction for the specified driver.
+	//
+	// Args:
+	//   - driver: The driver for which to retrieve the instruction.
+	// Returns:
+	//   - instruction: The instruction as a string.
+	//   - err: nil if the operation is successful, otherwise an error.
+	Instruction(ctx context.Context, driver string) (instruction string, err error)
+
 	// ReadPoints reads points from the given driver using the provided request.
 	//
 	// Args:

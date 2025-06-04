@@ -73,6 +73,30 @@ func SchemaHandler(endpoint endpoint.Endpoint) gin.HandlerFunc {
 	}
 }
 
+func InstructionHandler(endpoint endpoint.Endpoint) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		driver := c.Param("driver")
+		if driver == "" {
+			err := errors.New("driver parameter is required")
+			c.String(http.StatusBadRequest, err.Error())
+			c.Error(err)
+			c.Abort()
+			return
+		}
+
+		ctx := c.Request.Context()
+		instruction, err := endpoint(ctx, driver)
+		if err != nil {
+			c.String(http.StatusExpectationFailed, err.Error())
+			c.Error(err)
+			c.Abort()
+			return
+		}
+
+		c.JSON(http.StatusOK, instruction)
+	}
+}
+
 func ReadPointsHandler(endpoint endpoint.Endpoint) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		driver := c.Param("driver")

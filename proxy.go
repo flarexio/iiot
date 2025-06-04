@@ -56,6 +56,20 @@ func (mw *proxyMiddleware) Schema(ctx context.Context, driver string) (json.RawM
 	return schema, nil
 }
 
+func (mw *proxyMiddleware) Instruction(ctx context.Context, driver string) (string, error) {
+	resp, err := mw.endpoints.Instruction(ctx, driver)
+	if err != nil {
+		return "", err
+	}
+
+	instruction, ok := resp.(string)
+	if !ok {
+		return "", errors.New("invalid response")
+	}
+
+	return instruction, nil
+}
+
 func (mw *proxyMiddleware) ReadPoints(ctx context.Context, driver string, raw json.RawMessage) ([]any, error) {
 	req := ReadPointsRequest{
 		Driver: driver,

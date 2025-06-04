@@ -89,6 +89,7 @@ func run(ctx context.Context, cmd *cli.Command) error {
 		CheckConnection: iiot.CheckConnectionEndpoint(svc),
 		ListDrivers:     iiot.ListDriversEndpoint(svc),
 		Schema:          iiot.SchemaEndpoint(svc),
+		Instruction:     iiot.InstructionEndpoint(svc),
 		ReadPoints:      iiot.ReadPointsEndpoint(svc),
 	}
 

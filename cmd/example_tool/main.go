@@ -25,6 +25,7 @@ func main() {
 
 	server := stdio.NewStdioServer()
 	server.AddHandler("driver.schema", SchemaHandler(tool))
+	server.AddHandler("driver.instruction", InstructionHandler(tool))
 	server.AddHandler("driver.readPoints", ReadPointsHandler(tool))
 
 	go server.Listen(ctx)
@@ -38,6 +39,17 @@ func main() {
 func SchemaHandler(tool example.Tool) tool.Handler {
 	return func(ctx context.Context, data []byte) ([]byte, error) {
 		return tool.Schema(ctx)
+	}
+}
+
+func InstructionHandler(tool example.Tool) tool.Handler {
+	return func(ctx context.Context, data []byte) ([]byte, error) {
+		instruction, err := tool.Instruction(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		return []byte(instruction), nil
 	}
 }
 

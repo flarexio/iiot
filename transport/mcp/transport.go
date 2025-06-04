@@ -126,6 +126,46 @@ func SchemaHandler(endpoint endpoint.Endpoint) server.ToolHandlerFunc {
 	}
 }
 
+func InstructionTool(name ...string) mcp.Tool {
+	toolName := "Instruction"
+	if len(name) > 0 {
+		toolName = name[0]
+	}
+
+	return mcp.NewTool(toolName,
+		mcp.WithDescription("Get the instruction for a specific driver."),
+		WithContext("ctx", "Context for the request",
+			NewProperty("edge_id", "string", mcp.Description("The edge ID for the request")),
+		),
+		mcp.WithString("driver",
+			mcp.Required(),
+			mcp.Description("The name of the driver, such as 'modbus', 'opcua', etc."),
+		),
+	)
+}
+
+func InstructionHandler(endpoint endpoint.Endpoint) server.ToolHandlerFunc {
+	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		driver, err := request.RequireString("driver")
+		if err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
+		}
+
+		resp, err := endpoint(ctx, driver)
+		if err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
+		}
+
+		instruction, ok := resp.(string)
+		if !ok {
+			err := errors.New("invalid response type")
+			return mcp.NewToolResultError(err.Error()), nil
+		}
+
+		return mcp.NewToolResultText(string(instruction)), nil
+	}
+}
+
 func ReadPointsTool(name ...string) mcp.Tool {
 	toolName := "ReadPoints"
 	if len(name) > 0 {
@@ -162,7 +202,7 @@ func ReadPointsHandler(endpoint endpoint.Endpoint) server.ToolHandlerFunc {
 
 		points, ok := resp.([]any)
 		if !ok {
-			err = errors.New("invalid response type")
+			err := errors.New("invalid response type")
 			return mcp.NewToolResultError(err.Error()), nil
 		}
 

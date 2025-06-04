@@ -1,7 +1,6 @@
 package machine
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
@@ -43,16 +42,15 @@ const (
 )
 
 type Controller struct {
-	ControllerID string          `json:"controller_id"`
-	Type         ControllerType  `json:"type"`
-	Vendor       string          `json:"vendor"`
-	Model        string          `json:"model"`
-	Protocol     string          `json:"protocol"`
-	Driver       string          `json:"driver"`
-	Address      string          `json:"address"`
-	Points       []*Point        `json:"points"`
-	DriverConfig json.RawMessage `json:"driver_config"`
-	Options      map[string]any  `json:"options"`
+	ControllerID string         `json:"controller_id"`
+	Type         ControllerType `json:"type"`
+	Vendor       string         `json:"vendor"`
+	Model        string         `json:"model"`
+	Protocol     string         `json:"protocol"`
+	Driver       string         `json:"driver"`
+	Address      string         `json:"address"`
+	Points       []*Point       `json:"points"`
+	Options      map[string]any `json:"options"`
 
 	// driver Driver `json:"-"`
 }
@@ -75,13 +73,12 @@ const (
 )
 
 type Point struct {
-	Name         string          `json:"name"`
-	Display      string          `json:"display"`
-	Type         DataType        `json:"type"`
-	Access       AccessMode      `json:"access"`
-	Unit         string          `json:"unit"`
-	DriverConfig json.RawMessage `json:"driver_config"`
-	Options      map[string]any  `json:"options"`
+	Name    string         `json:"name"`
+	Display string         `json:"display"`
+	Type    DataType       `json:"type"`
+	Access  AccessMode     `json:"access"`
+	Unit    string         `json:"unit"`
+	Options map[string]any `json:"options"`
 
 	value *Value `json:"-"`
 }

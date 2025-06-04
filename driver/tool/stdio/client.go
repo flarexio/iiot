@@ -67,6 +67,25 @@ func (c *stdioClient) Schema(ctx context.Context, driver string) (json.RawMessag
 	return resp.Result, nil
 }
 
+func (c *stdioClient) Instruction(ctx context.Context, driver string) (string, error) {
+	program := driver + "_tool"
+
+	req := &Request{
+		Method: "driver.instruction",
+	}
+
+	resp, err := c.do(ctx, program, req)
+	if err != nil {
+		return "", err
+	}
+
+	if resp.Error != nil {
+		return "", resp.Error
+	}
+
+	return string(resp.Result), nil
+}
+
 func (c *stdioClient) ReadPoints(ctx context.Context, driver string, raw json.RawMessage) ([]any, error) {
 	program := driver + "_tool"
 

@@ -10,5 +10,6 @@ func AddEndpoints(group micro.Group, endpoints iiot.EndpointSet) {
 	group.AddEndpoint("check_connection", CheckConnectionHandler(endpoints.CheckConnection))
 	group.AddEndpoint("drivers", ListDriversHandler(endpoints.ListDrivers))
 	group.AddEndpoint("schema", SchemaHandler(endpoints.Schema))
+	group.AddEndpoint("instruction", InstructionHandler(endpoints.Instruction))
 	group.AddEndpoint("read_points", ReadPointsHandler(endpoints.ReadPoints))
 }

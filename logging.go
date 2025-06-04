@@ -75,6 +75,22 @@ func (mw *loggingMiddleware) Schema(ctx context.Context, driver string) (json.Ra
 	return schema, nil
 }
 
+func (mw *loggingMiddleware) Instruction(ctx context.Context, driver string) (string, error) {
+	log := mw.log.With(
+		zap.String("action", "instruction"),
+		zap.String("driver", driver),
+	)
+
+	instruction, err := mw.next.Instruction(ctx, driver)
+	if err != nil {
+		log.Error(err.Error())
+		return "", err
+	}
+
+	log.Info("instruction retrieved")
+	return instruction, nil
+}
+
 func (mw *loggingMiddleware) ReadPoints(ctx context.Context, driver string, raw json.RawMessage) ([]any, error) {
 	log := mw.log.With(
 		zap.String("action", "read_points"),

@@ -12,6 +12,7 @@ type EndpointSet struct {
 	CheckConnection endpoint.Endpoint
 	ListDrivers     endpoint.Endpoint
 	Schema          endpoint.Endpoint
+	Instruction     endpoint.Endpoint
 	ReadPoints      endpoint.Endpoint
 }
 
@@ -46,6 +47,17 @@ func SchemaEndpoint(svc Service) endpoint.Endpoint {
 		}
 
 		return svc.Schema(ctx, driver)
+	}
+}
+
+func InstructionEndpoint(svc Service) endpoint.Endpoint {
+	return func(ctx context.Context, request any) (any, error) {
+		driver, ok := request.(string)
+		if !ok {
+			return nil, errors.New("invalid request")
+		}
+
+		return svc.Instruction(ctx, driver)
 	}
 }
 

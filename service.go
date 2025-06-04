@@ -85,9 +85,34 @@ func (svc *service) ListDrivers(ctx context.Context) ([]string, error) {
 }
 
 func (svc *service) Schema(ctx context.Context, driver string) (json.RawMessage, error) {
+	if driver == "" {
+		return nil, errors.New("driver parameter is required")
+	}
+
 	return svc.tool.Schema(ctx, driver)
 }
 
+func (svc *service) Instruction(ctx context.Context, driver string) (string, error) {
+	if driver == "" {
+		return "", errors.New("driver parameter is required")
+	}
+
+	instruction, err := svc.tool.Instruction(ctx, driver)
+	if err != nil {
+		return "", err
+	}
+
+	if instruction == "" {
+		return "", errors.New("no instruction available for the specified driver")
+	}
+
+	return instruction, nil
+}
+
 func (svc *service) ReadPoints(ctx context.Context, driver string, raw json.RawMessage) ([]any, error) {
+	if driver == "" {
+		return nil, errors.New("driver parameter is required")
+	}
+
 	return svc.tool.ReadPoints(ctx, driver, raw)
 }

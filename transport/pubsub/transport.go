@@ -61,6 +61,25 @@ func SchemaHandler(endpoint endpoint.Endpoint) micro.HandlerFunc {
 	}
 }
 
+func InstructionHandler(endpoint endpoint.Endpoint) micro.HandlerFunc {
+	return func(r micro.Request) {
+		driver := string(r.Data())
+		if driver == "" {
+			r.Error("400", "driver parameter is required", nil)
+			return
+		}
+
+		ctx := context.Background()
+		instruction, err := endpoint(ctx, driver)
+		if err != nil {
+			r.Error("417", err.Error(), nil)
+			return
+		}
+
+		r.RespondJSON(&instruction)
+	}
+}
+
 func ReadPointsHandler(endpoint endpoint.Endpoint) micro.HandlerFunc {
 	return func(r micro.Request) {
 		var req iiot.ReadPointsRequest
