@@ -65,13 +65,16 @@ func run(ctx context.Context, cmd *cli.Command) error {
 	var svc iiot.Service
 	svc = iiot.ProxyMiddleware(endpoints)(svc)
 
-	s := server.NewMCPServer("IIoT Service", Version)
+	s := server.NewMCPServer(
+		"IIoT Service",
+		Version,
+		server.WithToolHandlerMiddleware(mcp.InjectContextMiddleware()),
+	)
 
 	// Add CheckConnection tool
 	{
 		endpoint := iiot.CheckConnectionEndpoint(svc)
 		handler := mcp.CheckConnectionHandler(endpoint)
-		handler = mcp.InjectContextMiddleware()(handler)
 		tool := mcp.CheckConnectionTool()
 		s.AddTool(tool, handler)
 	}
@@ -80,7 +83,6 @@ func run(ctx context.Context, cmd *cli.Command) error {
 	{
 		endpoint := iiot.ListDriversEndpoint(svc)
 		handler := mcp.ListDriversHandler(endpoint)
-		handler = mcp.InjectContextMiddleware()(handler)
 		tool := mcp.ListDriversTool()
 		s.AddTool(tool, handler)
 	}
@@ -89,7 +91,6 @@ func run(ctx context.Context, cmd *cli.Command) error {
 	{
 		endpoint := iiot.SchemaEndpoint(svc)
 		handler := mcp.SchemaHandler(endpoint)
-		handler = mcp.InjectContextMiddleware()(handler)
 		tool := mcp.SchemaTool()
 		s.AddTool(tool, handler)
 	}
@@ -98,7 +99,6 @@ func run(ctx context.Context, cmd *cli.Command) error {
 	{
 		endpoint := iiot.InstructionEndpoint(svc)
 		handler := mcp.InstructionHandler(endpoint)
-		handler = mcp.InjectContextMiddleware()(handler)
 		tool := mcp.InstructionTool()
 		s.AddTool(tool, handler)
 	}
@@ -107,7 +107,6 @@ func run(ctx context.Context, cmd *cli.Command) error {
 	{
 		endpoint := iiot.ReadPointsEndpoint(svc)
 		handler := mcp.ReadPointsHandler(endpoint)
-		handler = mcp.InjectContextMiddleware()(handler)
 		tool := mcp.ReadPointsTool()
 		s.AddTool(tool, handler)
 	}

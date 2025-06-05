@@ -27,13 +27,14 @@ func MakeEndpoints(nc *nats.Conn, prefix string) *iiot.EndpointSet {
 
 func CheckConnectionEndpoint(nc *nats.Conn, topic string) endpoint.Endpoint {
 	return func(ctx context.Context, request any) (any, error) {
-		if strings.Contains(topic, ":edge_id") {
+		pubTopic := topic
+		if strings.Contains(pubTopic, ":edge_id") {
 			edgeID, ok := ctx.Value(model.EdgeID).(string)
 			if !ok {
 				return nil, errors.New("invalid edge id")
 			}
 
-			topic = strings.Replace(topic, ":edge_id", edgeID, 1)
+			pubTopic = strings.Replace(pubTopic, ":edge_id", edgeID, 1)
 		}
 
 		req, ok := request.(iiot.CheckConnectionRequest)
@@ -46,7 +47,7 @@ func CheckConnectionEndpoint(nc *nats.Conn, topic string) endpoint.Endpoint {
 			return nil, err
 		}
 
-		msg, err := nc.Request(topic, data, 10*time.Second)
+		msg, err := nc.Request(pubTopic, data, 10*time.Second)
 		if err != nil {
 			return nil, err
 		}
@@ -61,16 +62,17 @@ func CheckConnectionEndpoint(nc *nats.Conn, topic string) endpoint.Endpoint {
 
 func ListDriversEndpoint(nc *nats.Conn, topic string) endpoint.Endpoint {
 	return func(ctx context.Context, request any) (any, error) {
-		if strings.Contains(topic, ":edge_id") {
+		pubTopic := topic
+		if strings.Contains(pubTopic, ":edge_id") {
 			edgeID, ok := ctx.Value(model.EdgeID).(string)
 			if !ok {
 				return nil, errors.New("invalid edge id")
 			}
 
-			topic = strings.Replace(topic, ":edge_id", edgeID, 1)
+			pubTopic = strings.Replace(pubTopic, ":edge_id", edgeID, 1)
 		}
 
-		msg, err := nc.Request(topic, nil, nats.DefaultTimeout)
+		msg, err := nc.Request(pubTopic, nil, nats.DefaultTimeout)
 		if err != nil {
 			return nil, err
 		}
@@ -90,13 +92,14 @@ func ListDriversEndpoint(nc *nats.Conn, topic string) endpoint.Endpoint {
 
 func SchemaEndpoint(nc *nats.Conn, topic string) endpoint.Endpoint {
 	return func(ctx context.Context, request any) (any, error) {
-		if strings.Contains(topic, ":edge_id") {
+		pubTopic := topic
+		if strings.Contains(pubTopic, ":edge_id") {
 			edgeID, ok := ctx.Value(model.EdgeID).(string)
 			if !ok {
 				return nil, errors.New("invalid edge id")
 			}
 
-			topic = strings.Replace(topic, ":edge_id", edgeID, 1)
+			pubTopic = strings.Replace(pubTopic, ":edge_id", edgeID, 1)
 		}
 
 		driver, ok := request.(string)
@@ -104,7 +107,7 @@ func SchemaEndpoint(nc *nats.Conn, topic string) endpoint.Endpoint {
 			return nil, errors.New("invalid request")
 		}
 
-		msg, err := nc.Request(topic, []byte(driver), nats.DefaultTimeout)
+		msg, err := nc.Request(pubTopic, []byte(driver), nats.DefaultTimeout)
 		if err != nil {
 			return nil, err
 		}
@@ -125,13 +128,14 @@ func SchemaEndpoint(nc *nats.Conn, topic string) endpoint.Endpoint {
 
 func InstructionEndpoint(nc *nats.Conn, topic string) endpoint.Endpoint {
 	return func(ctx context.Context, request any) (any, error) {
-		if strings.Contains(topic, ":edge_id") {
+		pubTopic := topic
+		if strings.Contains(pubTopic, ":edge_id") {
 			edgeID, ok := ctx.Value(model.EdgeID).(string)
 			if !ok {
 				return nil, errors.New("invalid edge id")
 			}
 
-			topic = strings.Replace(topic, ":edge_id", edgeID, 1)
+			pubTopic = strings.Replace(pubTopic, ":edge_id", edgeID, 1)
 		}
 
 		driver, ok := request.(string)
@@ -139,7 +143,7 @@ func InstructionEndpoint(nc *nats.Conn, topic string) endpoint.Endpoint {
 			return nil, errors.New("invalid request")
 		}
 
-		msg, err := nc.Request(topic, []byte(driver), nats.DefaultTimeout)
+		msg, err := nc.Request(pubTopic, []byte(driver), nats.DefaultTimeout)
 		if err != nil {
 			return nil, err
 		}
@@ -154,13 +158,14 @@ func InstructionEndpoint(nc *nats.Conn, topic string) endpoint.Endpoint {
 
 func ReadPointsEndpoint(nc *nats.Conn, topic string) endpoint.Endpoint {
 	return func(ctx context.Context, request any) (any, error) {
-		if strings.Contains(topic, ":edge_id") {
+		pubTopic := topic
+		if strings.Contains(pubTopic, ":edge_id") {
 			edgeID, ok := ctx.Value(model.EdgeID).(string)
 			if !ok {
 				return nil, errors.New("invalid edge id")
 			}
 
-			topic = strings.Replace(topic, ":edge_id", edgeID, 1)
+			pubTopic = strings.Replace(pubTopic, ":edge_id", edgeID, 1)
 		}
 
 		req, ok := request.(iiot.ReadPointsRequest)
@@ -173,7 +178,7 @@ func ReadPointsEndpoint(nc *nats.Conn, topic string) endpoint.Endpoint {
 			return nil, err
 		}
 
-		msg, err := nc.Request(topic, data, nats.DefaultTimeout)
+		msg, err := nc.Request(pubTopic, data, nats.DefaultTimeout)
 		if err != nil {
 			return nil, err
 		}
