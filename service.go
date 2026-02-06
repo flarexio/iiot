@@ -69,7 +69,9 @@ func (svc *service) ListDrivers(ctx context.Context) ([]string, error) {
 			continue
 		}
 
-		driver, ok := strings.CutSuffix(entry.Name(), "_tool")
+		filename := strings.TrimSuffix(entry.Name(), filepath.Ext(entry.Name()))
+
+		driver, ok := strings.CutSuffix(filename, "_tool")
 		if !ok {
 			continue
 		}

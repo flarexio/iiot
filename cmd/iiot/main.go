@@ -36,6 +36,11 @@ func main() {
 				Name:  "path",
 				Usage: "Path to the IIoT service",
 			},
+			&cli.BoolFlag{
+				Name:  "http-enable",
+				Usage: "Enable HTTP transport",
+				Value: false,
+			},
 			&cli.IntFlag{
 				Name:  "port",
 				Usage: "HTTP server port",
@@ -65,7 +70,7 @@ func run(ctx context.Context, cmd *cli.Command) error {
 			return err
 		}
 
-		path = homeDir + "/.flarex/iiot"
+		path = filepath.Join(homeDir, ".flarex", "iiot")
 	}
 
 	log, err := zap.NewDevelopment()
@@ -94,7 +99,7 @@ func run(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	// Add HTTP Transport
-	{
+	if cmd.Bool("http-enable") {
 		port := cmd.Int("port")
 
 		r := gin.Default()

@@ -85,7 +85,7 @@ func InstructionHandler(endpoint endpoint.Endpoint) gin.HandlerFunc {
 		}
 
 		ctx := c.Request.Context()
-		instruction, err := endpoint(ctx, driver)
+		resp, err := endpoint(ctx, driver)
 		if err != nil {
 			c.String(http.StatusExpectationFailed, err.Error())
 			c.Error(err)
@@ -93,7 +93,16 @@ func InstructionHandler(endpoint endpoint.Endpoint) gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusOK, instruction)
+		instruction, ok := resp.(string)
+		if !ok {
+			err := errors.New("invalid instruction response type")
+			c.String(http.StatusInternalServerError, err.Error())
+			c.Error(err)
+			c.Abort()
+			return
+		}
+
+		c.String(http.StatusOK, instruction)
 	}
 }
 
